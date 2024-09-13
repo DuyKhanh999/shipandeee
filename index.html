@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Menu</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Hệ thống tính tiền ship Ăndeee</h1>
+    <form method="post">
+        <div class="form-group">
+            <label>Khách hàng:</label><input type="text" name="customer" value="{{ customer_info.get('customer', '') }}"><br>
+            <label>SDT:</label><input type="text" name="phone" value="{{ customer_info.get('phone', '') }}"><br>
+            <label>Địa chỉ:</label><input type="text" name="address" value="{{ customer_info.get('address', '') }}"><br><br>
+        </div>
+
+        <input type="text" id="search" placeholder="Nhập tên món...">
+        <ul id="suggestions"></ul>
+
+        <div id="selected-items">
+            {% for item in selected_items %}
+                <p>{{ item['Số lượng'] }} {{ item['Tên món'] }}: {{ item['Giá'] * item['Số lượng'] }}</p>
+            {% endfor %}
+        </div>
+
+        <br><label>SHIP:</label><input type="number" name="ship" value="0"><br>
+        <br><input type="submit" value="Tính tiền"><br><br>
+        <button id="reset-btn" type="submit" name="action" value="reset">Làm Mới</button>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $('#search').on('input', function() {
+                let query = $(this).val();
+                $.getJSON('/suggest', { q: query }, function(data) {
+                    let suggestions = data.map(item => `<li data-name="${item['Tên món']}" data-price="${item['Giá']}">${item['Tên món']}</li>`);
+                    $('#suggestions').html(suggestions.join(''));
+                });
+            });
+
+            $('#suggestions').on('click', 'li', function() {
+                let name = $(this).data('name');
+                let price = $(this).data('price');
+                let quantity = prompt('Nhập số lượng:');
+
+                if (quantity && !isNaN(quantity) && quantity > 0) {
+                    $('#selected-items').append(`<p>${quantity} ${name}: ${price * quantity}</p>`);
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'item',
+                        value: name
+                    }).appendTo('form');
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'quantity',
+                        value: quantity
+                    }).appendTo('form');
+                    $('#suggestions').empty();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
